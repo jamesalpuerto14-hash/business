@@ -1,4 +1,3 @@
-<script>
 "use strict";
 
 (() => {
@@ -372,4 +371,3 @@
   render();
   updatePreview();
 })();
-</script>
