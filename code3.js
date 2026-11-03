@@ -1,4 +1,3 @@
-<script>
 "use strict";
 
 (() => {
@@ -8,6 +7,8 @@
   const form = get("productForm");
   const table = get("productTable");
   const search = get("search");
+  const message = get("message");
+  const storageNote = get("storageNote");
 
   const itemName = get("itemName");
   const itemType = get("itemType");
@@ -37,10 +38,66 @@
   }
 
   function createId() {
-    return window.crypto?.randomUUID
-      ? window.crypto.randomUUID()
-      : `product-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    try {
+      if (window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+      }
+    } catch (error) {
+      /* fall through to the simple id below */
+    }
+    return `product-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
+
+  /* ---------- Messages (replaces alert pop-ups) ---------- */
+
+  let messageTimer = null;
+
+  function showMessage(text, type) {
+    message.textContent = text;
+    message.className = `message ${type || "error"}`;
+    clearTimeout(messageTimer);
+    messageTimer = setTimeout(clearMessage, 6000);
+    if (message.scrollIntoView) message.scrollIntoView({ block: "nearest" });
+  }
+
+  function clearMessage() {
+    message.textContent = "";
+    message.className = "message";
+  }
+
+  /* ---------- Storage (works even when the browser blocks it) ---------- */
+
+  let storageAvailable = true;
+
+  function readStorage() {
+    try {
+      return window.localStorage.getItem(STORAGE_KEY);
+    } catch (error) {
+      storageAvailable = false;
+      return null;
+    }
+  }
+
+  function writeStorage(text) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, text);
+      return true;
+    } catch (error) {
+      storageAvailable = false;
+      return false;
+    }
+  }
+
+  function updateStorageNote() {
+    storageNote.textContent = storageAvailable
+      ? "Products are saved in this browser only. " +
+        "Clearing browser storage may remove saved products."
+      : "This browser is blocking storage here, so products work " +
+        "normally but will be lost when you refresh or close this page. " +
+        "Open the file directly in Chrome, Edge or Firefox to keep them.";
+  }
+
+  /* ---------- Validation and calculation ---------- */
 
   function getFormData() {
     return {
@@ -76,6 +133,28 @@
       product.type.trim() !== "" &&
       validNumbers(product)
     );
+  }
+
+  function findProblem(product) {
+    if (!product.name) {
+      return { field: itemName, text: "Enter an item name." };
+    }
+    if (!product.type) {
+      return { field: itemType, text: "Select an item type." };
+    }
+    if (!Number.isFinite(product.pricePerPack) || product.pricePerPack < 0.01) {
+      return { field: pricePerPack, text: "Price per pack must be at least ₱0.01." };
+    }
+    if (!Number.isSafeInteger(product.numberOfPacks) || product.numberOfPacks < 1) {
+      return { field: numberOfPacks, text: "Number of packs must be a whole number, 1 or more." };
+    }
+    if (!Number.isSafeInteger(product.itemsPerPack) || product.itemsPerPack < 1) {
+      return { field: itemsPerPack, text: "Items per pack must be a whole number, 1 or more." };
+    }
+    if (!Number.isFinite(product.markup) || product.markup < 10 || product.markup > 100) {
+      return { field: markup, text: "Markup must be between 10% and 100%." };
+    }
+    return null;
   }
 
   function calculate(product) {
@@ -127,11 +206,11 @@
     );
   }
 
+  /* ---------- Load and save ---------- */
+
   function loadProducts() {
     try {
-      const saved = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
-      );
+      const saved = JSON.parse(readStorage() || "[]");
 
       if (!Array.isArray(saved)) return [];
 
@@ -152,22 +231,16 @@
 
   let products = loadProducts();
 
+  // Saving never blocks the app: if the browser refuses storage,
+  // the product still works for this session.
   function saveProducts(nextProducts) {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(nextProducts)
-      );
-      return true;
-    } catch (error) {
-      console.error("Could not save products:", error);
-      alert(
-        "Your browser could not save the products. " +
-        "Please check whether browser storage is available."
-      );
-      return false;
+    if (writeStorage(JSON.stringify(nextProducts))) {
+      storageAvailable = true;
     }
+    updateStorageNote();
   }
+
+  /* ---------- Live preview ---------- */
 
   function updatePreview() {
     const product = getFormData();
@@ -194,6 +267,11 @@
     sellingPricePreview.textContent = money(result.sellingPrice);
     profitPerItemPreview.textContent = money(result.profitPerItem);
   }
+
+  /* ---------- Table and summary ---------- */
+
+  let pendingDeleteId = null;
+  let pendingDeleteTimer = null;
 
   function render() {
     const query = search.value.trim().toLowerCase();
@@ -243,12 +321,18 @@
 
       const actionCell = document.createElement("td");
       const button = document.createElement("button");
+      const confirming = pendingDeleteId === product.id;
 
       button.type = "button";
-      button.className = "delete";
+      button.className = confirming ? "delete confirming" : "delete";
       button.dataset.id = product.id;
-      button.textContent = "Delete";
-      button.setAttribute("aria-label", `Delete ${product.name}`);
+      button.textContent = confirming ? "Click to confirm" : "Delete";
+      button.setAttribute(
+        "aria-label",
+        confirming
+          ? `Confirm deleting ${product.name}`
+          : `Delete ${product.name}`
+      );
 
       actionCell.appendChild(button);
       row.appendChild(actionCell);
@@ -275,18 +359,23 @@
     averageRoi.textContent = `${average.toFixed(2)}%`;
   }
 
+  /* ---------- Events ---------- */
+
   form.addEventListener("submit", event => {
     event.preventDefault();
 
-    if (!form.reportValidity()) return;
-
     const product = getFormData();
 
+    const problem = findProblem(product);
+
+    if (problem) {
+      showMessage(problem.text);
+      problem.field.focus();
+      return;
+    }
+
     if (!isValidProduct(product)) {
-      alert(
-        "Please complete all fields correctly. Pack quantities " +
-        "must be whole numbers and markup must be 10%–100%."
-      );
+      showMessage("Please check the values you entered.");
       return;
     }
 
@@ -296,14 +385,14 @@
     );
 
     if (duplicate) {
-      alert("A product with the same name and type already exists.");
+      showMessage("A product with the same name and type already exists.");
       return;
     }
 
     const result = calculate(product);
 
     if (!hasValidResults(result)) {
-      alert("The values are too large. Please enter smaller amounts.");
+      showMessage("The values are too large. Please enter smaller amounts.");
       return;
     }
 
@@ -320,44 +409,50 @@
     );
 
     if (!totalsAreFinite) {
-      alert("The combined totals are too large.");
+      showMessage("The combined totals are too large.");
       return;
     }
 
-    if (!saveProducts(nextProducts)) return;
-
     products = nextProducts;
+    saveProducts(products);
     render();
+
     form.reset();
     markup.value = "10";
     updatePreview();
+    showMessage(`"${result.name}" was added.`, "success");
     itemName.focus();
   });
 
   search.addEventListener("input", render);
 
+  // Two-step delete: first click asks, second click confirms.
   table.addEventListener("click", event => {
     const button = event.target.closest("button.delete");
     if (!button) return;
 
-    const product = products.find(
-      entry => entry.id === button.dataset.id
-    );
-
+    const id = button.dataset.id;
+    const product = products.find(entry => entry.id === id);
     if (!product) return;
 
-    if (!window.confirm(
-      `Delete "${product.name}"? This cannot be undone.`
-    )) return;
+    clearTimeout(pendingDeleteTimer);
 
-    const nextProducts = products.filter(
-      entry => entry.id !== product.id
-    );
+    if (pendingDeleteId !== id) {
+      pendingDeleteId = id;
+      render();
 
-    if (!saveProducts(nextProducts)) return;
+      pendingDeleteTimer = setTimeout(() => {
+        pendingDeleteId = null;
+        render();
+      }, 4000);
+      return;
+    }
 
-    products = nextProducts;
+    pendingDeleteId = null;
+    products = products.filter(entry => entry.id !== id);
+    saveProducts(products);
     render();
+    showMessage(`"${product.name}" was deleted.`, "success");
   });
 
   [
@@ -369,7 +464,7 @@
     input.addEventListener("input", updatePreview);
   });
 
+  updateStorageNote();
   render();
   updatePreview();
 })();
-</script>
