@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>Product Cost and Profit Calculator</title>
-<link rel="stylesheet" href="business.css">
-<script src="business.js" defer></script>
+
+  <!-- Uses the replacement business.js provided earlier. -->
+  <script src="business.js" defer></script>
+
   <style>
     @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
 
@@ -29,9 +36,22 @@
       margin: 0;
       padding: 44px 24px;
       background:
-        radial-gradient(ellipse at 8% 8%, rgba(255, 218, 190, 0.65), transparent 32%),
-        radial-gradient(ellipse at 92% 20%, rgba(190, 235, 207, 0.7), transparent 34%),
-        linear-gradient(145deg, #fffaf3 0%, #f0faf3 55%, #f5f8ff 100%);
+        radial-gradient(
+          ellipse at 8% 8%,
+          rgba(255, 218, 190, 0.65),
+          transparent 32%
+        ),
+        radial-gradient(
+          ellipse at 92% 20%,
+          rgba(190, 235, 207, 0.7),
+          transparent 34%
+        ),
+        linear-gradient(
+          145deg,
+          #fffaf3 0%,
+          #f0faf3 55%,
+          #f5f8ff 100%
+        );
       color: var(--ink);
       font-family: "DM Sans", Arial, sans-serif;
     }
@@ -42,10 +62,9 @@
     }
 
     h1,
-    h2,
-    h3 {
+    h2 {
       color: var(--ink);
-      font-family: "Plus Jakarta Sans", sans-serif;
+      font-family: "Plus Jakarta Sans", Arial, sans-serif;
     }
 
     h1 {
@@ -54,13 +73,10 @@
       letter-spacing: -0.045em;
     }
 
-    .container > h1::after {
-      content: "A simple way to keep track of your costs and earnings";
-      display: block;
-      margin-top: 10px;
+    .subtitle {
+      margin: 0 0 24px;
       color: var(--muted);
-      font: 400 1rem "DM Sans", sans-serif;
-      letter-spacing: 0;
+      line-height: 1.6;
     }
 
     h2 {
@@ -152,12 +168,19 @@
       font: inherit;
       font-weight: 700;
       cursor: pointer;
-      transition: background 160ms ease, transform 160ms ease;
+      transition:
+        background 160ms ease,
+        transform 160ms ease;
     }
 
     button:hover {
       background: var(--green-dark);
       transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid rgba(49, 139, 112, 0.4);
+      outline-offset: 3px;
     }
 
     .delete {
@@ -214,11 +237,12 @@
 
     .box strong {
       color: var(--green-dark);
-      font-family: "Plus Jakarta Sans", sans-serif;
+      font-family: "Plus Jakarta Sans", Arial, sans-serif;
       font-size: 1.55rem;
+      overflow-wrap: anywhere;
     }
 
-    #search {
+    .search-label {
       max-width: 360px;
       margin-bottom: 18px;
     }
@@ -228,6 +252,11 @@
       border: 1px solid var(--line);
       border-radius: 13px;
       background: var(--white);
+    }
+
+    .table-wrap:focus-visible {
+      outline: 3px solid rgba(49, 139, 112, 0.4);
+      outline-offset: 3px;
     }
 
     table {
@@ -267,6 +296,24 @@
       text-align: center;
     }
 
+    .calculation-note {
+      margin: 18px 0 0;
+      padding: 15px 17px;
+      border: 1px solid #d9efdf;
+      border-radius: 12px;
+      background: #f1faf3;
+      color: #52665b;
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .storage-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
     @media (max-width: 800px) {
       .form-grid,
       .summary {
@@ -277,6 +324,10 @@
     @media (max-width: 520px) {
       body {
         padding: 22px 12px;
+      }
+
+      .card {
+        padding: 20px;
       }
 
       .form-grid,
@@ -293,17 +344,33 @@
 </head>
 
 <body>
-  <div class="container">
+  <main class="container">
     <h1>Product Cost and Profit Calculator</h1>
+
+    <p class="subtitle">
+      A simple way to estimate product costs, selling prices,
+      and potential earnings.
+    </p>
+
+    <noscript>
+      <p>
+        Please enable JavaScript to use this calculator.
+      </p>
+    </noscript>
 
     <form id="productForm" class="card">
       <div class="form-grid">
-        <label>
+        <label for="itemName">
           Item name
-          <input type="text" id="itemName" required>
+          <input
+            type="text"
+            id="itemName"
+            placeholder="Enter product name"
+            required
+          >
         </label>
 
-        <label>
+        <label for="itemType">
           Item type
           <select id="itemType" required>
             <option value="">Select a type</option>
@@ -319,28 +386,57 @@
           </select>
         </label>
 
-        <label>
-          Price per pack
-          <input type="number" id="pricePerPack" min="0.01" step="0.01" required>
+        <label for="pricePerPack">
+          Price per pack (₱)
+          <input
+            type="number"
+            id="pricePerPack"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00"
+            required
+          >
         </label>
 
-        <label>
+        <label for="numberOfPacks">
           Number of packs
-          <input type="number" id="numberOfPacks" min="1" step="1" required>
+          <input
+            type="number"
+            id="numberOfPacks"
+            min="1"
+            step="1"
+            placeholder="1"
+            required
+          >
         </label>
 
-        <label>
+        <label for="itemsPerPack">
           Items per pack
-          <input type="number" id="itemsPerPack" min="1" step="1" required>
+          <input
+            type="number"
+            id="itemsPerPack"
+            min="1"
+            step="1"
+            placeholder="1"
+            required
+          >
         </label>
 
-        <label>
+        <label for="markup">
           Markup (%)
-          <input type="number" id="markup" min="10" max="100" step="0.01" value="10" required>
+          <input
+            type="number"
+            id="markup"
+            min="10"
+            max="100"
+            step="0.01"
+            value="10"
+            required
+          >
         </label>
       </div>
 
-      <div class="total">
+      <div class="total" aria-live="polite" aria-atomic="true">
         <div>
           <span>Total purchase price:</span>
           <strong id="totalCost">₱0.00</strong>
@@ -352,7 +448,7 @@
         </div>
 
         <div>
-          <span>Profit per item:</span>
+          <span>Expected profit per item:</span>
           <strong id="profitPerItemPreview">₱0.00</strong>
         </div>
       </div>
@@ -360,284 +456,85 @@
       <button type="submit">Add Product</button>
     </form>
 
-    <div class="summary">
+    <section class="summary" aria-label="Product summary">
       <div class="box">
         <span>Total products</span>
         <strong id="totalProducts">0</strong>
       </div>
 
       <div class="box">
-        <span>Total cost</span>
+        <span>Total purchase cost</span>
         <strong id="totalCostValue">₱0.00</strong>
       </div>
 
       <div class="box">
-        <span>Total profit</span>
+        <span>Expected total profit</span>
         <strong id="totalProfitValue">₱0.00</strong>
       </div>
 
       <div class="box">
-        <span>Average ROI</span>
+        <span>Average estimated ROI</span>
         <strong id="averageRoi">0.00%</strong>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <h2>Saved Products</h2>
+    <section class="card" aria-labelledby="savedProductsHeading">
+      <h2 id="savedProductsHeading">Saved Products</h2>
 
-      <input type="search" id="search" placeholder="Search products">
+      <label for="search" class="search-label">
+        Search products
+        <input
+          type="search"
+          id="search"
+          placeholder="Search by product name or type"
+        >
+      </label>
 
-      <div class="table-wrap">
+      <div
+        class="table-wrap"
+        role="region"
+        aria-label="Saved product calculations"
+        tabindex="0"
+      >
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Packs</th>
-              <th>Total items</th>
-              <th>Total cost</th>
-              <th>Cost/item</th>
-              <th>Selling price</th>
-              <th>Profit/item</th>
-              <th>Total profit</th>
-              <th>ROI</th>
-              <th>Action</th>
+              <th scope="col">Name</th>
+              <th scope="col">Type</th>
+              <th scope="col">Packs</th>
+              <th scope="col">Total items</th>
+              <th scope="col">Purchase cost</th>
+              <th scope="col">Cost/item</th>
+              <th scope="col">Selling price/item</th>
+              <th scope="col">Expected profit/item</th>
+              <th scope="col">Expected total profit</th>
+              <th scope="col">Estimated ROI</th>
+              <th scope="col">Action</th>
             </tr>
           </thead>
+
           <tbody id="productTable"></tbody>
         </table>
       </div>
-    </div>
-  </div>
 
-  <script>
-    const form = document.getElementById("productForm");
-    const table = document.getElementById("productTable");
-    const search = document.getElementById("search");
+      <p class="calculation-note">
+        <strong>Calculation note:</strong>
+        Estimated profit assumes all items are sold at the
+        calculated selling price. Calculations include purchase
+        costs only and exclude other business expenses, such as
+        transportation, rent, labor, and taxes. Selling prices
+        are rounded upward to the nearest whole peso, so the
+        resulting markup may be higher than the percentage
+        entered. Average estimated ROI is the simple average
+        of the saved products' estimated ROI percentages,
+        not the combined return on total purchase cost.
+      </p>
 
-    const itemName = document.getElementById("itemName");
-    const itemType = document.getElementById("itemType");
-    const pricePerPack = document.getElementById("pricePerPack");
-    const numberOfPacks = document.getElementById("numberOfPacks");
-    const itemsPerPack = document.getElementById("itemsPerPack");
-    const markup = document.getElementById("markup");
-
-    const totalCost = document.getElementById("totalCost");
-    const sellingPricePreview = document.getElementById("sellingPricePreview");
-    const profitPerItemPreview = document.getElementById("profitPerItemPreview");
-
-    let products = [];
-
-    try {
-      const savedProducts = JSON.parse(localStorage.getItem("products"));
-      if (Array.isArray(savedProducts)) {
-        products = savedProducts;
-      }
-    } catch {
-      products = [];
-    }
-
-    function money(value) {
-      const numberValue = Number(value);
-      return Number.isFinite(numberValue)
-        ? "₱" + numberValue.toFixed(2)
-        : "₱0.00";
-    }
-
-    function getNumber(input) {
-      const value = Number(input.value);
-      return Number.isFinite(value) ? value : 0;
-    }
-
-    function updatePreview() {
-      const price = getNumber(pricePerPack);
-      const packs = getNumber(numberOfPacks);
-      const items = getNumber(itemsPerPack);
-      const markupValue = getNumber(markup);
-
-      const purchaseTotal = price * packs;
-      const totalItems = packs * items;
-      const costPerItem = totalItems > 0 ? purchaseTotal / totalItems : 0;
-
-      // Always round the selling price up to a whole peso.
-      const sellingPrice = costPerItem > 0
-        ? Math.ceil(costPerItem * (1 + markupValue / 100))
-        : 0;
-
-      const profitPerItem = sellingPrice - costPerItem;
-
-      totalCost.textContent = money(purchaseTotal);
-      sellingPricePreview.textContent = money(sellingPrice);
-      profitPerItemPreview.textContent = money(profitPerItem);
-    }
-
-    function calculate(product) {
-      const totalCostValue = product.pricePerPack * product.numberOfPacks;
-      const totalItems = product.numberOfPacks * product.itemsPerPack;
-      const costPerItem = totalItems > 0 ? totalCostValue / totalItems : 0;
-
-      // For example, ₱10.35 becomes ₱11.
-      const sellingPrice = costPerItem > 0
-        ? Math.ceil(costPerItem * (1 + product.markup / 100))
-        : 0;
-
-      const profitPerItem = sellingPrice - costPerItem;
-      const totalProfit = profitPerItem * totalItems;
-
-      return {
-        ...product,
-        totalCostValue,
-        totalItems,
-        costPerItem,
-        sellingPrice,
-        profitPerItem,
-        totalProfit,
-        roi: totalCostValue > 0
-          ? (totalProfit / totalCostValue) * 100
-          : 0
-      };
-    }
-
-    function isValidProduct(product) {
-      return (
-        product.name !== "" &&
-        product.type !== "" &&
-        product.pricePerPack > 0 &&
-        product.numberOfPacks > 0 &&
-        product.itemsPerPack > 0 &&
-        product.markup >= 10 &&
-        product.markup <= 100
-      );
-    }
-
-    function save() {
-      localStorage.setItem("products", JSON.stringify(products));
-    }
-
-    function render() {
-      const searchValue = search.value.toLowerCase();
-      table.innerHTML = "";
-
-      const filtered = products.filter(product =>
-        String(product.name).toLowerCase().includes(searchValue) ||
-        String(product.type).toLowerCase().includes(searchValue)
-      );
-
-      if (filtered.length === 0) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.colSpan = 11;
-        cell.className = "empty-message";
-        cell.textContent = products.length
-          ? "No matching products found."
-          : "No products saved yet.";
-        row.appendChild(cell);
-        table.appendChild(row);
-      }
-
-      filtered.forEach(product => {
-        const row = document.createElement("tr");
-        const values = [
-          product.name,
-          product.type,
-          product.numberOfPacks,
-          product.totalItems,
-          money(product.totalCostValue),
-          money(product.costPerItem),
-          money(product.sellingPrice),
-          money(product.profitPerItem),
-          money(product.totalProfit),
-          Number(product.roi || 0).toFixed(2) + "%"
-        ];
-
-        values.forEach(value => {
-          const cell = document.createElement("td");
-          cell.textContent = value;
-          row.appendChild(cell);
-        });
-
-        const actionCell = document.createElement("td");
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.className = "delete";
-        deleteButton.dataset.id = product.id;
-        deleteButton.textContent = "Delete";
-        actionCell.appendChild(deleteButton);
-        row.appendChild(actionCell);
-
-        table.appendChild(row);
-      });
-
-      const totalCostAll = products.reduce(
-        (total, product) => total + Number(product.totalCostValue || 0),
-        0
-      );
-
-      const totalProfitAll = products.reduce(
-        (total, product) => total + Number(product.totalProfit || 0),
-        0
-      );
-
-      const averageRoiAll = products.length
-        ? products.reduce(
-            (total, product) => total + Number(product.roi || 0),
-            0
-          ) / products.length
-        : 0;
-
-      document.getElementById("totalProducts").textContent = products.length;
-      document.getElementById("totalCostValue").textContent = money(totalCostAll);
-      document.getElementById("totalProfitValue").textContent = money(totalProfitAll);
-      document.getElementById("averageRoi").textContent =
-        averageRoiAll.toFixed(2) + "%";
-    }
-
-    form.addEventListener("submit", function(event) {
-      event.preventDefault();
-
-      const product = {
-        id: Date.now(),
-        name: itemName.value.trim(),
-        type: itemType.value,
-        pricePerPack: getNumber(pricePerPack),
-        numberOfPacks: getNumber(numberOfPacks),
-        itemsPerPack: getNumber(itemsPerPack),
-        markup: getNumber(markup)
-      };
-
-      if (!isValidProduct(product)) {
-        alert("Please complete all fields with valid values. Markup must be between 10% and 100%.");
-        return;
-      }
-
-      products.push(calculate(product));
-      save();
-      render();
-
-      form.reset();
-      markup.value = 10;
-      updatePreview();
-    });
-
-    search.addEventListener("input", render);
-
-    table.addEventListener("click", function(event) {
-      const deleteButton = event.target.closest(".delete");
-      if (!deleteButton) return;
-
-      const id = Number(deleteButton.dataset.id);
-      products = products.filter(product => product.id !== id);
-
-      save();
-      render();
-    });
-
-    [pricePerPack, numberOfPacks, itemsPerPack, markup].forEach(input => {
-      input.addEventListener("input", updatePreview);
-    });
-
-    render();
-    updatePreview();
-  </script>
+      <p class="storage-note">
+        Products are saved in this browser only.
+        Clearing browser storage may remove saved products.
+      </p>
+    </section>
+  </main>
 </body>
 </html>
